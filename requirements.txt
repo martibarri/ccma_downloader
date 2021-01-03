@@ -1,0 +1,5 @@
+requests
+beautifulsoup4
+selenium
+git+https://github.com/martibarri/huepy.git
+wget
