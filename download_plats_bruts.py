@@ -15,6 +15,7 @@ from huepy import info, run, bad, good, warn, bold
 
 BASE_URL = "https://www.ccma.cat"
 BASE_API = "https://api.ccma.cat"
+DINAMICS_API = "https://dinamics.ccma.cat"
 
 
 def plats_bruts(href):
@@ -54,6 +55,25 @@ def get_capitols_api():
         nom_friendly = capitol["nom_friendly"]
         capitol["url"] = f"{BASE_URL}/tv3/alacarta/plats-bruts/{nom_friendly}/video/{c_id}/"
     return capitols
+
+
+def get_mp4_link_api(capitol_id):
+    api_url = f"{DINAMICS_API}/pvideo/media.jsp?media=video&versio=googima&idint={capitol_id}&profile=pc&broadcast=false&format=dm"
+    api_response = requests.get(api_url)
+    json = api_response.json()
+    try:
+        mp4_links = json["variants"]["media"]["url"]
+    except KeyError:
+        mp4_links = json["media"]["url"]
+    try:
+        max_resolution = str(max([int(link["label"][:-1]) for link in mp4_links])) + "p"
+        url_mp4 = [link["file"] for link in mp4_links if max_resolution in link["label"]][0]
+    except Exception:
+        url_mp4 = None
+    if url_mp4:
+        print(info(f"video url disclossed with {max_resolution}"))
+        print(bold(url_mp4))
+    return url_mp4
 
 
 def selenium_parse(url):
@@ -166,7 +186,7 @@ def main():
     # Step 1 #
     ##########
     # Get public urls for each episode using requests, and save all data to a local file.
-    # capitol_links = get_capitol_links()  $ old method
+    # capitol_links = get_capitol_links()  # old method
     saved_data = read_json_data()
     if len(saved_data) == 73:
         print(info("using saved data"))
@@ -181,17 +201,19 @@ def main():
     ##########
     # Step 2 #
     ##########
-    # Obtain the hidden mp4 url of each episode using selenium.
+    # Obtain the hidden mp4 url of each episode.
     for capitol in capitols:
         url_mp4 = None
         try:
             if not capitol["url_mp4"]:
-                url_mp4 = selenium_parse(capitol["url"])
+                # url_mp4 = selenium_parse(capitol["url"])  # old method using selenium
+                url_mp4 = get_mp4_link_api(capitol["id"])
             else:
                 print(good(f"capitol {capitol['capitol']} url_mp4 ok"))
                 continue
         except KeyError:
-            url_mp4 = selenium_parse(capitol["url"])
+            # url_mp4 = selenium_parse(capitol["url"])  # old method using selenium
+            url_mp4 = get_mp4_link_api(capitol["id"])
         if url_mp4:
             capitol["url_mp4"] = url_mp4
             print(good(f"capitol {capitol['capitol']} url_mp4 ok"))
