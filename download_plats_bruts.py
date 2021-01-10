@@ -58,7 +58,7 @@ def get_capitols_api():
 
 
 def get_mp4_link_api(capitol_id):
-    api_url = f"{DINAMICS_API}/pvideo/media.jsp?media=video&versio=googima&idint={capitol_id}&profile=pc&broadcast=false&format=dm"
+    api_url = f"{DINAMICS_API}/pvideo/media.jsp?media=video&idint={capitol_id}"
     api_response = requests.get(api_url)
     json = api_response.json()
     try:
