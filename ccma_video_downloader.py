@@ -1,7 +1,7 @@
 import json
+import unicodedata
 import urllib
 from pathlib import Path
-from unicodedata import normalize
 
 import requests
 import wget
@@ -11,6 +11,11 @@ from rich.traceback import install
 
 c = Console()
 install()
+
+
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 
 class ClientCCMA:
@@ -91,7 +96,7 @@ def download_mp4(programatv_id, video):
         save_dir.mkdir()
     except FileExistsError:
         pass
-    file_name = f"{normalize('NFKD', video['programa'])}_{video['titol']}.mp4".replace(" ", "_")
+    file_name = remove_accents(f"{video['programa']}_{video['titol']}.mp4").replace(" ", "_")
     file_name = Path(file_name)
     if (save_dir / file_name).exists():
         c.print(f"{file_name} already exists", style="green")
